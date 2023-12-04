@@ -2,14 +2,14 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-def get_stereo_projection(x):
+def get_stereo_proj(x):
     d = x.shape[-1] - 1
     numerator = x[..., :d]
     denominator = 1 - x[..., d]
     near_pole = np.isclose(denominator, 0)
-    projection = np.full_like(x[..., :d], np.inf) 
-    projection[~near_pole] = numerator[~near_pole] / denominator[~near_pole, np.newaxis]
-    return torch.tensor(projection)
+    proj = np.full_like(x[..., :d], np.inf) 
+    proj[~near_pole] = numerator[~near_pole] / denominator[~near_pole, np.newaxis]
+    return torch.tensor(proj)
 
 class Phi(nn.Module):
     def __init__(self, size):

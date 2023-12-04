@@ -1,6 +1,6 @@
 import torch
 
-def generate_rand_projections(dim, n_projs=1000):
+def generate_rand_projs(dim, n_projs=1000):
     projs = torch.randn(n_projs, dim)
     return projs / torch.norm(projs, p=2, dim=1, keepdim=True)
 
