@@ -11,8 +11,8 @@ def s3wd(samples_1, samples_2, p, h=None, n_projs=1000, device='cpu'):
     samples_1_sp = get_stereo_proj(samples_1).to(device)
     samples_2_sp = get_stereo_proj(samples_2).to(device)
 
-    s1_h = h(samples_1_sp)
-    s2_h = h(samples_2_sp)
+    s1_h = h(samples_1_sp).double()
+    s2_h = h(samples_2_sp).double()
     
     projs = generate_rand_projs(s1_h.shape[-1], n_projs).to(device)
     s1_h_rp, s2_h_rp = s1_h @ projs.T, s2_h @ projs.T    
@@ -31,7 +31,7 @@ def max_s3wd(samples_1, samples_2, n_projs, p=2, n_iters=1000, lam=20, device='c
     for _ in range(n_iters):
         h_optimizer.zero_grad()
         
-        s1_h, s2_h = h(samples_1_sp), h(samples_2_sp)
+        s1_h, s2_h = h(samples_1_sp).douoble(), h(samples_2_sp).double()
         
         reg = lam * (s1_h.norm(p=2, dim=1) + s2_h.norm(p=2, dim=1)).mean()
         projs = generate_rand_projs(s1_h.shape[-1], n_projs).to(device)
