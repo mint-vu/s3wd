@@ -20,11 +20,24 @@ def get_stereo_proj_torch(x):
     proj[~near_pole] = numerator[~near_pole] / denominator[~near_pole].unsqueeze(-1)
     return proj
 
+# class Phi(nn.Module):
+#     def __init__(self, size):
+#         super(Phi, self).__init__()
+#         self.size = size
+#         self.net = nn.Sequential(nn.Linear(self.size, self.size))
+#     def forward(self, x):
+#         xhat = self.net(x)
+#         return torch.cat((x,xhat),dim=-1)
+    
 class Phi(nn.Module):
-    def __init__(self, size):
-        super(Phi, self).__init__()
-        self.size = size
-        self.net = nn.Sequential(nn.Linear(self.size, self.size))
+    def __init__(self, hidden_dim=128):
+        super().__init__()
+        self.linear1 = nn.Linear(2, hidden_dim)
+        self.linear2 = nn.Linear(hidden_dim, hidden_dim)
+        self.linear3 = nn.Linear(hidden_dim, 2)
+
     def forward(self, x):
-        xhat = self.net(x)
-        return torch.cat((x,xhat),dim=-1)
+        xhat = nn.Tanh()(self.linear1(x))
+        xhat = nn.Tanh()(self.linear2(xhat))
+        xhat = self.linear3(xhat)
+        return torch.cat((xhat, x), dim=1) 
