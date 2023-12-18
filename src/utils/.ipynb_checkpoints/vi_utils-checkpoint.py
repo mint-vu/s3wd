@@ -34,7 +34,7 @@ def ULA_sphere(V, n_particles=1000, d=2, dt=1e-3, n_steps=4000, device='cpu', in
 
     if init_particles is None:
         x0 = normal.sample((n_particles,))
-        x0 = F.normalize(x0, p=2, dim=-1)  # Uniform on sphere
+        x0 = F.normalize(x0, p=2, dim=-1)  
     else:
         x0 = init_particles
 
@@ -50,7 +50,7 @@ def ULA_sphere(V, n_particles=1000, d=2, dt=1e-3, n_steps=4000, device='cpu', in
         xk = xk.detach()
 
         v = -grad_V * dt + np.sqrt(2 * dt) * W
-        v = v - torch.sum(v * xk, axis=-1)[:, None] * xk  # Projection on tangent space
+        v = v - torch.sum(v * xk, axis=-1)[:, None] * xk  
         norm_v = torch.linalg.norm(v, axis=-1)[:, None]
 
         xk = xk * torch.cos(norm_v) + torch.sin(norm_v) * v / norm_v

@@ -30,7 +30,7 @@ class ExpMap(BaseNF):
         
         ## Projection on T_x S^d of \nabla \phi
         v = grad_phi -  torch.sum(x*grad_phi, axis=-1)[:,None]*x
-        norm_v = torch.linalg.norm(v, dim=-1)[:,None]
+        norm_v = torch.linalg.norm(v, dim=-1)[:,None] + 1e-9
         exp = x * torch.cos(norm_v) + (v/norm_v) * torch.sin(norm_v)
 
         ## Orthonormal basis T_x S^d        

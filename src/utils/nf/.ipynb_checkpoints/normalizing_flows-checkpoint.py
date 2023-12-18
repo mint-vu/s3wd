@@ -13,7 +13,7 @@ class NormalizingFlows(BaseNF):
         Refs: 
         - https://github.com/karpathy/pytorch-normalizing-flows/blob/master/nflib/flows.py
     """
-    def __init__(self, flows, device='cpu'):
+    def __init__(self, flows, device):
         """
     		Inputs:
     		- flows: list of BaseNFs objects

@@ -12,7 +12,7 @@ from IPython.display import display, clear_output
 from utils.nf.normalizing_flows import make_NF
 from utils.vi_utils import ULA_sphere
 
-def swsvi_nf(n_epochs, V, d_func, d_args, lr=1e-3, model=None, d=3, n_particles=100, steps_mcmc=20, 
+def run_exp(n_epochs, V, d_func, d_args, lr=1e-3, model=None, d=3, n_particles=100, steps_mcmc=20, 
              dt_mcmc=1e-3, device='cpu', snapshot_t=None):
     """
     Runs SWVI with a Normalizing Flow model and a custom distance function.

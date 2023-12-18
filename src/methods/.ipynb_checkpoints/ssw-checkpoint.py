@@ -261,6 +261,11 @@ def sliced_cost(Xs, Xt, Us, p=2, u_weights=None, v_weights=None):
         p: float
             Power
     """
+    device = Us.device
+    
+    Xs = Xs.to(device)
+    Xt = Xt.to(device)
+    
     n_projs, d, k = Us.shape
     n, _ = Xs.shape
     m, _ = Xt.shape    
