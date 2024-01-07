@@ -1,9 +1,10 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import geotorch
 
 from utils.utils import generate_rand_projs
-from utils.s3w_utils import get_stereo_proj_torch, Phi, calc_rot, rotate, hStar, make_virtual_grid, find_pnp
+from utils.s3w_utils import get_stereo_proj_torch, Phi, hStar, make_virtual_grid, find_pnp
 
 from tqdm import tqdm
 import time
@@ -16,19 +17,13 @@ def s3wd(X, Y, p, h=None, n_projs=1000, device='cpu', random_pnp=True):
     Y_ = Y.to(device)
     
     if random_pnp:
-        pnp = torch.rand(3,device=device)
-        pnp[-1] = 0
-        pnp /= torch.norm(pnp)
+        n = X_.shape[-1]
+        rot_matrix = geotorch.SO(torch.Size([n, n])).sample('uniform').to(device)
+        X_ = X_ @ rot_matrix
+        Y_ = Y_ @ rot_matrix
     else:
         grid = make_virtual_grid(n_points=1000, device=device)
         pnp = find_pnp(torch.concat((X_, Y_), dim=0), grid, device=device)
-
-    rot_axis, rot_angle = calc_rot(pnp, device=device)
-    rot_axis = rot_axis.to(device)
-    rot_angle = rot_angle.to(device)
-
-    X_ = rotate(X_, rot_axis, rot_angle)
-    Y_ = rotate(Y_, rot_axis, rot_angle)
 
     X_sp = get_stereo_proj_torch(X_).to(device)
     Y_sp = get_stereo_proj_torch(Y_).to(device)
@@ -45,11 +40,11 @@ def s3wd(X, Y, p, h=None, n_projs=1000, device='cpu', random_pnp=True):
     return wd
 
 def max_s3wd(X, Y, n_projs, p=2, n_iters=1000, lam=20, device='cpu'):
-    h = hPhi().to(device)
+    h = Phi().to(device)
     h_optimizer = optim.Adam(h.parameters(), lr=8e-3, betas=(0.999, 0.999))
     
-    X_sp = get_stereo_proj(X.detach()).to(device)
-    Y_sp = get_stereo_proj(Y.detach()).to(device)
+    X_sp = get_stereo_proj_torch(X.detach()).to(device)
+    Y_sp = get_stereo_proj_torch(Y.detach()).to(device)
     
     for _ in range(n_iters):
         h_optimizer.zero_grad()
