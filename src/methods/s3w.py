@@ -9,33 +9,46 @@ from utils.s3w_utils import get_stereo_proj_torch, Phi, hStar, make_virtual_grid
 from tqdm import tqdm
 import time
 
-def ri_s3wd(X, Y, p, h=None, n_projs=1000, device='cpu', n_rotations=1):
-    # NOTE: h must accept vectors of the form (n_rotations, n_points, dim)
-    if h is None: h = hStar()
-    
-    X_ = X.to(device)
-    Y_ = Y.to(device)
-    
-    n = X_.shape[-1]
-    rot_matrices = [geotorch.SO(torch.Size([n, n])).sample('uniform') for _ in range(n_rotations)]
-    rot_matrices = torch.stack(rot_matrices).to(device)
-    X_ = (rot_matrices @ X_.T).permute(0, 2, 1)
-    Y_ = (rot_matrices @ Y_.T).permute(0, 2, 1)
+def ri_s3wd(X, Y, p, h=None, n_projs=1000, device='cpu', n_rotations=1, batch=True):
+    if not batch:
+        ds = []
+        for _ in range(n_rotations):
+            d = s3wd(X, Y, p, h, n_projs, device)
+            if d.isnan().any() or d.isinf().any():
+                continue
+            ds.append(d)
+        if not ds:
+            print('Warning: all values of d are NaN or Inf')
+        return torch.stack(ds).mean()
+    else:
+        # NOTE: h must accept vectors of the form (n_rotations, n_points, dim)
+        if h is None: h = hStar()
+        
+        X_ = X.to(device)
+        Y_ = Y.to(device)
+        
+        n = X_.shape[-1]
+        rot_matrices = [geotorch.SO(torch.Size([n, n])).sample('uniform') for _ in range(n_rotations)]
+        rot_matrices = torch.stack(rot_matrices).to(device)
+        X_ = (rot_matrices @ X_.T).permute(0, 2, 1)
+        Y_ = (rot_matrices @ Y_.T).permute(0, 2, 1)
 
-    X_sp = get_stereo_proj_torch(X_).to(device)
-    Y_sp = get_stereo_proj_torch(Y_).to(device)
-    s1_h = h(X_sp).double()
-    s2_h = h(Y_sp).double()
+        X_[..., -1] = torch.min(X[..., -1], torch.tensor(1.-2e-6))
+        Y_[..., -1] = torch.min(Y[..., -1], torch.tensor(1.-2e-6))
+        X_sp = get_stereo_proj_torch(X_).to(device)
+        Y_sp = get_stereo_proj_torch(Y_).to(device)
 
-    projs = generate_rand_projs(s1_h.shape[-1], n_projs).to(device)
-    s1_h_rp, s2_h_rp = s1_h @ projs.T, s2_h @ projs.T
+        s1_h = h(X_sp).double()
+        s2_h = h(Y_sp).double()
 
-    d = torch.abs(torch.sort(s1_h_rp.transpose(-2, -1), dim=-1).values - 
-                  torch.sort(s2_h_rp.transpose(-2, -1), dim=-1).values)
+        projs = generate_rand_projs(s1_h.shape[-1], n_projs).to(device)
+        s1_h_rp, s2_h_rp = s1_h @ projs.T, s2_h @ projs.T
 
-    wd = d.pow(p).sum(dim=-1).pow(1. / p).mean()
-    return wd
+        d = torch.abs(torch.sort(s1_h_rp.transpose(-2, -1), dim=-1).values - 
+                    torch.sort(s2_h_rp.transpose(-2, -1), dim=-1).values)
 
+        wd = d.pow(p).sum(dim=-1).pow(1. / p).mean(dim=-1)
+        return wd.mean()
     
 def s3wd(X, Y, p, h=None, n_projs=1000, device='cpu', random_pnp=True):
     if h is None: h = hStar()
