@@ -2,24 +2,70 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import geotorch
+import numpy as np
 
 from utils.utils import generate_rand_projs
-from utils.s3w_utils import get_stereo_proj_torch, Phi, hStar, make_virtual_grid, find_pnp
+from utils.s3w_utils import get_stereo_proj_torch, Phi, hStar
 
-from tqdm import tqdm
-import time
+from typing import List
+
+def h_jit(x):
+    x_sq_sum = (x**2).sum(-1).clamp(min=1e-8)
+    x_dp1 = torch.clip((x_sq_sum - 1) / (x_sq_sum + 1), -1, 1)
+    arc_input = torch.clip(-x_dp1, -1, 1)
+    arccos = torch.arccos(arc_input)
+    h = (arccos / np.pi).unsqueeze(-1) * (x / torch.sqrt(x_sq_sum).unsqueeze(-1))
+    return h
+
+def s3wd_jit(X, Y, rot_matrix, projs):   
+    X_ = X @ rot_matrix
+    Y_ = Y @ rot_matrix
+
+    X_sp = get_stereo_proj_torch(X_).to(X.device)
+    Y_sp = get_stereo_proj_torch(Y_).to(X.device)
+    s1_h = h_jit(X_sp).double()
+    s2_h = h_jit(Y_sp).double()
+
+    s1_h_rp, s2_h_rp = s1_h @ projs.T, s2_h @ projs.T
+
+    d = torch.abs(torch.sort(s1_h_rp.transpose(0, 1), dim=1).values - 
+                  torch.sort(s2_h_rp.transpose(0, 1), dim=1).values)
+
+    wd = d.pow(2.).sum(dim=1).pow(0.5).mean()
+    return wd
+
+@torch.jit.script
+def ri_s3wd_jit(X, Y, rot_matrices, projs):
+    futures : List[torch.jit.Future[torch.Tensor]] = []
+    for i in torch.arange(rot_matrices.shape[0]):
+        futures.append(torch.jit.fork(s3wd_jit, X, Y, rot_matrices[i], projs))
+
+    res = []
+    for future in futures:
+        res.append(torch.jit.wait(future))
+    
+    ds = []
+    for r in res:
+        if not r.isnan().any() and not r.isinf().any():
+            ds.append(r)
+    return torch.stack(ds).mean()
 
 def ri_s3wd(X, Y, p, h=None, n_projs=1000, device='cpu', n_rotations=1, batch=True):
     if not batch:
-        ds = []
-        for _ in range(n_rotations):
-            d = s3wd(X, Y, p, h, n_projs, device)
-            if d.isnan().any() or d.isinf().any():
-                continue
-            ds.append(d)
-        if not ds:
-            print('Warning: all values of d are NaN or Inf')
-        return torch.stack(ds).mean()
+        n = X.shape[-1]
+        rot_matrices = [geotorch.SO(torch.Size([n, n])).sample('uniform') for _ in range(n_rotations)]
+        rot_matrices = torch.stack(rot_matrices).to(device)
+        projs = generate_rand_projs(n-1, n_projs).to(device)
+        return ri_s3wd_jit(X.to(device), Y.to(device), rot_matrices, projs)
+        # ds = []
+        # for _ in range(n_rotations):
+        #     d = s3wd(X, Y, p, h, n_projs, device)
+        #     if d.isnan().any() or d.isinf().any():
+        #         continue
+        #     ds.append(d)
+        # if not ds:
+        #     print('Warning: all values of d are NaN or Inf')
+        # return torch.stack(ds).mean()
     else:
         # NOTE: h must accept vectors of the form (n_rotations, n_points, dim)
         if h is None: h = hStar()
@@ -61,9 +107,6 @@ def s3wd(X, Y, p, h=None, n_projs=1000, device='cpu', random_pnp=True):
         rot_matrix = geotorch.SO(torch.Size([n, n])).sample('uniform').to(device)
         X_ = X_ @ rot_matrix
         Y_ = Y_ @ rot_matrix
-    else:
-        grid = make_virtual_grid(n_points=1000, device=device)
-        pnp = find_pnp(torch.concat((X_, Y_), dim=0), grid, device=device)
 
     X_sp = get_stereo_proj_torch(X_).to(device)
     Y_sp = get_stereo_proj_torch(Y_).to(device)
