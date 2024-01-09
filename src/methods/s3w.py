@@ -43,17 +43,20 @@ def ri_s3wd(X, Y, p, h=None, n_projs=1000, n_rotations=1, device='cpu'):
 def s3wd(X, Y, p, h=None, n_projs=1000, device='cpu', random_pnp=True):
     if h is None: h = hStar()
     
-    X_ = X.to(device)
-    Y_ = Y.to(device)
+    X = X.to(device)
+    Y = Y.to(device)
     
     if random_pnp:
-        n = X_.shape[-1]
+        n = X.shape[-1]
         rot_matrix = geotorch.SO(torch.Size([n, n])).sample('uniform').to(device)
-        X_ = X_ @ rot_matrix
-        Y_ = Y_ @ rot_matrix
+        X = X @ rot_matrix
+        Y = Y @ rot_matrix
 
-    X_sp = get_stereo_proj_torch(X_).to(device)
-    Y_sp = get_stereo_proj_torch(Y_).to(device)
+    X_eps = epsilon_projection(X)
+    Y_eps = epsilon_projection(Y)
+
+    X_sp = get_stereo_proj_torch(X_eps).to(device)
+    Y_sp = get_stereo_proj_torch(Y_eps).to(device)
     s1_h = h(X_sp).double()
     s2_h = h(Y_sp).double()
 
