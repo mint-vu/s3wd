@@ -12,14 +12,23 @@ def get_stereo_proj(x):
     proj[~near_pole] = numerator[~near_pole] / denominator[~near_pole, np.newaxis]
     return torch.tensor(proj)
 
-def get_stereo_proj_torch(x):
+def get_stereo_proj_torch(x, epsilon=1e-6):
     d = x.shape[-1] - 1
     numerator = 2 * x[..., :d]
     denominator = 1 - x[..., d]
-    near_pole = torch.isclose(denominator, torch.zeros_like(denominator), atol=1e-6)
+    near_pole = torch.isclose(denominator, torch.zeros_like(denominator), atol=epsilon)
     proj = torch.full_like(x[..., :d], float('inf')) 
     proj[~near_pole] = numerator[~near_pole] / denominator[~near_pole].unsqueeze(-1)
     return proj
+
+def epsilon_projection(x, epsilon=1e-6):
+    n = torch.where(x[..., -1] == 1.)
+    if n[0].numel() > 0:    
+        x.data[n] = x[n] + (epsilon * torch.rand_like(x[n]) - epsilon/2)
+    x.data[..., -1] = torch.min(x[..., -1], torch.tensor(1.-epsilon)) 
+    alpha = torch.sqrt((1 - x[..., -1]**2)/(x[..., :-1]**2).sum(-1))
+    x.data[..., :-1] *= alpha.unsqueeze(-1)  
+    return x
 
 def rotate(points, axis, angle):
     cos_ = torch.cos(angle)
