@@ -27,6 +27,7 @@ def epsilon_projection(x, epsilon=1e-6):
         x.data[n] = x[n] + (epsilon * torch.rand_like(x[n]) - epsilon/2)
     x.data[..., -1] = torch.min(x[..., -1], torch.tensor(1.-epsilon)) 
     alpha = torch.sqrt((1 - x[..., -1]**2)/(x[..., :-1]**2).sum(-1))
+    alpha[alpha.isnan()] = 1. # Correct for instances where the point is at the south pole
     x.data[..., :-1] *= alpha.unsqueeze(-1)  
     return x
 
