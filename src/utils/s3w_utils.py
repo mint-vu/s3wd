@@ -80,10 +80,10 @@ class hStar(nn.Module):
     def __init__(self):
         super(hStar, self).__init__()
 
-    def forward(self, x):
+    def forward(self, x, epsilon=1e-6):
         x_sq_sum = (x**2).sum(-1).clamp(min=1e-8)
         x_dp1 = torch.clip((x_sq_sum - 1) / (x_sq_sum + 1), -1, 1)
-        arc_input = torch.clip(-x_dp1, -1, 1)
+        arc_input = torch.clip(-x_dp1, -1 + epsilon, 1 - epsilon)
         arccos = torch.arccos(arc_input)
         h = (arccos / np.pi).unsqueeze(-1) * (x / torch.sqrt(x_sq_sum).unsqueeze(-1))
         return h
