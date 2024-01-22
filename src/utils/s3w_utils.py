@@ -4,8 +4,21 @@ import numpy as np
 from tqdm import tqdm
 import geotorch
 
-def gen_rotations(N, d, device='cpu'):
-    return torch.stack([geotorch.SO((d, d)).sample('uniform') for _ in range(N)])
+
+class RotationPool:
+    rot_matrices = None
+    d = None
+
+    @staticmethod
+    def generate(d, pool_size):
+        if RotationPool.rot_matrices is None or RotationPool.d != d:
+            RotationPool.rot_matrices = torch.stack([geotorch.SO(torch.Size([d, d])).sample('uniform') for _ in range(pool_size)])
+            RotationPool.d = d
+        return RotationPool.rot_matrices
+    @staticmethod
+    def reset():
+        RotationPool.rot_matrices = None
+        RotationPool.d = None
 
 def get_stereo_proj(x):
     d = x.shape[-1] - 1
