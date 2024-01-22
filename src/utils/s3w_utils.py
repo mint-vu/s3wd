@@ -2,6 +2,10 @@ import torch
 import torch.nn as nn
 import numpy as np
 from tqdm import tqdm
+import geotorch
+
+def gen_rotations(N, d, device='cpu'):
+    return torch.stack([geotorch.SO((d, d)).sample('uniform') for _ in range(N)])
 
 def get_stereo_proj(x):
     d = x.shape[-1] - 1
