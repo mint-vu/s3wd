@@ -4,6 +4,7 @@ import numpy as np
 from tqdm import tqdm
 import geotorch
 
+<<<<<<< HEAD
 
 class RotationPool:
     rot_matrices_ = None
@@ -17,11 +18,27 @@ class RotationPool:
             RotationPool.d_ = d
             RotationPool.pool_size_ = pool_size
         return RotationPool.rot_matrices_
+=======
+class RotationPool:
+    rot_matrices = None
+    d = None
+
+    @staticmethod
+    def generate(d, pool_size):
+        if RotationPool.rot_matrices is None or RotationPool.d != d:
+            RotationPool.rot_matrices = torch.stack([geotorch.SO(torch.Size([d, d])).sample('uniform') for _ in range(pool_size)])
+            RotationPool.d = d
+        return RotationPool.rot_matrices
+    
+>>>>>>> fec67281eee08c4342c17541c51d4960ec4b2e98
     @staticmethod
     def reset():
         RotationPool.rot_matrices = None
         RotationPool.d = None
+<<<<<<< HEAD
 
+=======
+>>>>>>> fec67281eee08c4342c17541c51d4960ec4b2e98
 
 def get_stereo_proj(x):
     d = x.shape[-1] - 1
@@ -51,41 +68,6 @@ def epsilon_projection(x, epsilon=1e-6):
     x.data[..., :-1] *= alpha.unsqueeze(-1)  
     return x
 
-def rotate(points, axis, angle):
-    cos_ = torch.cos(angle)
-    sin_ = torch.sin(angle)
-    cross_prod = torch.cross(axis.repeat(points.shape[0], 1), points)
-    dot_prod = torch.sum(points * axis, dim=1, keepdim=True)
-    rotated_points = cos_.unsqueeze(-1) * points + sin_.unsqueeze(-1) * cross_prod + (1.0 - cos_).unsqueeze(-1) * dot_prod * axis
-    return rotated_points
-
-def calc_rot(new_pole, device='cpu'):
-    orig_pole = torch.tensor([0, 0, 1], dtype=torch.float32, device=device)
-    axis = torch.cross(orig_pole, new_pole)
-    axis = axis / torch.norm(axis) 
-    angle = torch.acos(torch.dot(orig_pole, new_pole) / torch.norm(new_pole))
-    return axis, angle
-
-def make_virtual_grid(n_points=1000, device='cpu'):
-    phi = torch.rand(n_points, device=device) * 2 * torch.pi
-    cos_theta = torch.rand(n_points, device=device) * 2 - 1
-    theta = torch.acos(cos_theta)
-
-    x = torch.sin(theta) * torch.cos(phi)
-    y = torch.sin(theta) * torch.sin(phi)
-    z = torch.cos(theta)
-
-    return torch.stack([x, y, z], dim=1)
-
-def find_pnp(X, grid, device='cuda'):
-    X = X.to(device)
-    grid = grid.to(device)
-    D= torch.cdist(X, grid)
-    min_ds, _ = torch.min(D, dim=0)
-    idx = torch.argmax(min_ds).item()
-    return grid[idx]
-
-
 class Phi(nn.Module):
     def __init__(self, size):
         super(Phi, self).__init__()
@@ -94,7 +76,6 @@ class Phi(nn.Module):
     def forward(self, x):
         xhat = self.net(x)
         return torch.cat((x,xhat),dim=-1)
-    
 
 class hStar(nn.Module):
     def __init__(self):

@@ -9,6 +9,10 @@ from utils.s3w_utils import get_stereo_proj_torch, epsilon_projection, Phi, hSta
 
 from typing import List
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> fec67281eee08c4342c17541c51d4960ec4b2e98
 def ri_s3wd(X, Y, p, h=None, n_projs=1000, n_rotations=1, device='cpu'):
     # NOTE: h must accept vectors of the form (n_rotations, n_points, dim)
     if h is None: h = hStar()
@@ -35,11 +39,20 @@ def ri_s3wd(X, Y, p, h=None, n_projs=1000, n_rotations=1, device='cpu'):
     s1_h_rp, s2_h_rp = s1_h @ projs.T, s2_h @ projs.T
 
     d = torch.abs(torch.sort(s1_h_rp.transpose(-2, -1), dim=-1).values - 
+<<<<<<< HEAD
                 torch.sort(s2_h_rp.transpose(-2, -1), dim=-1).values)
 
     wd = d.pow(p).sum(dim=-1).pow(1. / p).mean(dim=-1)
     return wd.mean()
 
+=======
+                  torch.sort(s2_h_rp.transpose(-2, -1), dim=-1).values)
+
+    wd = d.pow(p).sum(dim=-1).mean(dim=-1)
+    return wd.mean()
+
+
+>>>>>>> fec67281eee08c4342c17541c51d4960ec4b2e98
 def ari_s3wd(X, Y, p, h=None, n_projs=1000, n_rotations=1, pool_size=100, device='cpu'):
     if h is None: h = hStar()
 
@@ -105,6 +118,7 @@ def s3wd(X, Y, p, h=None, n_projs=1000, device='cpu', random_pnp=False):
 
     wd = d.pow(p).sum(dim=1).mean()
     return wd
+
 
 def max_s3wd(X, Y, n_projs, p=2, n_iters=1000, lam=20, device='cpu'):
     h = Phi().to(device)
