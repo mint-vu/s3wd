@@ -12,7 +12,7 @@ class RotationPool:
 
     @staticmethod
     def generate(d, pool_size):
-        if RotationPool.rot_matrices_ is None or RotationPool.d_ != d or RotationPool.pool_size_ != pool_size:
+        if RotationPool.rot_matrices_ is None or RotationPool.d_ != d or RotationPool.pool_size_ < pool_size:
             RotationPool.rot_matrices_ = torch.stack([geotorch.SO(torch.Size([d, d])).sample('uniform') for _ in range(pool_size)])
             RotationPool.d_ = d
             RotationPool.pool_size_ = pool_size
@@ -20,8 +20,9 @@ class RotationPool:
     
     @staticmethod
     def reset():
-        RotationPool.rot_matrices = None
-        RotationPool.d = None
+        RotationPool.rot_matrices_ = None
+        RotationPool.d_ = None
+        RotationPool.pool_size_ = None
 
 def get_stereo_proj(x):
     d = x.shape[-1] - 1
