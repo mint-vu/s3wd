@@ -18,24 +18,6 @@ def rand_u_hypersphere(N, p):
         v /= np.linalg.norm(v, axis=1, keepdims=True)
     return v
 
-
-def compute_paalc(losses, n_steps, max_loss):
-    """
-    Compute the percentage of the area above the loss curve within a defined rectangle.
-
-    Args:
-    - losses (list): List of loss values.
-    - n_steps (int): Total number of steps.
-    - highest_loss (float): The highest loss value for the rectangle's height.
-
-    Returns:
-    - float: The PAALC
-    """
-    area_under_loss_curve = np.trapz(losses, dx=1)
-    total_area = n_steps * max_loss
-    area_above_loss_curve = total_area - area_under_loss_curve
-    return (area_above_loss_curve/total_area)*100
-
 def rand_t_marginal(kappa, p, N=1):
     if is_tensor(kappa):
         b = (p - 1.0) / (2.0 * kappa + torch.sqrt(4.0 * kappa**2 + (p - 1.0)**2))
@@ -90,7 +72,6 @@ def euclidean_to_spherical(euc_coords):
         np.pi + np.arctan2(-y, -x),
         np.arccos(z)
     ), 1)
-
 
 def spherical_to_euclidean_torch(x):
     '''
