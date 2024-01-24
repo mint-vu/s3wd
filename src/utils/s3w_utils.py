@@ -23,6 +23,55 @@ class RotationPool:
         RotationPool.rot_matrices_ = None
         RotationPool.d_ = None
         RotationPool.pool_size_ = None
+        
+class RotationSchedule:
+    def __init__(self, n_epochs):
+        self.n_epochs = n_epochs
+        self.current_epoch = 0
+        self.current_n_rotations = 0
+
+    def step(self):
+        if self.current_epoch < self.n_epochs - 1:
+            self.current_epoch += 1
+            self.update()
+        else:
+            self.current_n_rotations = self.get_max()
+
+    def update(self):
+        raise NotImplementedError
+
+    def get(self):
+        return self.current_n_rotations
+
+    def get_max(self):
+        return self.current_n_rotations
+
+
+class LinearRS(RotationSchedule):
+    def __init__(self, min_n_rotations, max_n_rotations, n_epochs):
+        super().__init__(n_epochs)
+        self.min_n_rotations = min_n_rotations
+        self.max_n_rotations = max_n_rotations
+        self.step_size = (max_n_rotations - min_n_rotations) / n_epochs
+        self.current_n_rotations = self.min_n_rotations
+    
+    def update(self):
+        n_rotations = self.min_n_rotations + self.step_size * self.current_epoch
+        self.current_n_rotations = min(int(n_rotations), self.max_n_rotations)
+
+class CustomRS(RotationSchedule):
+    def __init__(self, schedule_dict, n_epochs):
+        super().__init__(n_epochs)
+        self.schedule_dict = schedule_dict
+        self.update()
+
+    def update(self):
+        self.current_n_rotations = self.schedule_dict.get(self.current_epoch, self.current_n_rotations)
+
+    def get_max(self):
+        return self.schedule_dict.get(self.n_epochs - 1, self.current_n_rotations)
+                                       
+
 
 def get_stereo_proj(x):
     d = x.shape[-1] - 1
