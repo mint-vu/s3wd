@@ -114,7 +114,7 @@ def ari_s3wd_unif(X, p, h=None, n_projs=1000, n_rotations=1, pool_size=100, devi
 
     assert pool_size >= n_rotations
 
-    rotation_pool = RotationPool.generate(n, pool_size)
+    rotation_pool = RotationPool.get(n, pool_size)
 
     indices = torch.randperm(rotation_pool.size(0))[:n_rotations]
     rot_matrices = rotation_pool[indices].to(device)
