@@ -8,10 +8,10 @@ from copy import deepcopy
 
 from methods.ssw import sswd
 # from methods.sw import swd
-from utils.power_spherical_utils import PowerSpherical
+from utils.power_spherical import PowerSpherical
 from utils.nf.normalizing_flows import make_NF
-from utils.plot_utils import scatter_mollweide, plot_target_density
-from utils.utils import spherical_to_euclidean_torch, spherical_to_euclidean
+from utils.plot import scatter_mollweide, plot_target_density
+from utils.misc import spherical_to_euclidean_torch, spherical_to_euclidean
 
 def ULA_sphere(V, n_particles=1000, d=2, dt=1e-3, n_steps=4000, device='cpu', init_particles=None):
     """

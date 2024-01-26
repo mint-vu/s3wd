@@ -4,8 +4,8 @@ from torch.utils.data import DataLoader
 from itertools import cycle
 from tqdm import trange
 
-from utils import plot_utils, s3w_utils, vmf_utils, utils
-from methods import s3w, ssw, sw
+# from utils import plot, s3w, vmf, misc
+
 
 def run_exp(X_target, X0, d_func, d_args, device, n_steps=2000, lr=0.1, batch_size=500):
     """

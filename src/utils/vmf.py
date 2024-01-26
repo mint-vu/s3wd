@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from utils.utils import rand_t_marginal, rand_u_hypersphere
+from utils.misc import rand_t_marginal, rand_u_hypersphere
 from scipy.linalg import null_space
 
 def pdf_vmf(x, mu, kappa):

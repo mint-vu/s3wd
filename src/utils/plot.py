@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from utils import s3w_utils, utils
+from utils import s3w, misc
 
 theta = np.linspace(0, 2 * np.pi, 2 * 100)
 phi = np.linspace(0, np.pi, 100)

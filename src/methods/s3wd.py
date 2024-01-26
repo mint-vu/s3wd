@@ -4,8 +4,8 @@ import torch.optim as optim
 import geotorch
 import numpy as np
 
-from utils.utils import generate_rand_projs
-from utils.s3w_utils import get_stereo_proj_torch, epsilon_projection, Phi, hStar, RotationPool
+from utils.misc import generate_rand_projs
+from utils.s3w import get_stereo_proj_torch, epsilon_projection, hStar, RotationPool
 
 from typing import List
 
@@ -78,7 +78,7 @@ def ari_s3wd(X, Y, p, h=None, n_projs=1000, n_rotations=1, pool_size=100, device
 
     assert pool_size >= n_rotations
 
-    rotation_pool = RotationPool.generate(n, pool_size)
+    rotation_pool = RotationPool.get(n, pool_size)
 
     indices = torch.randperm(rotation_pool.size(0))[:n_rotations]
     rot_matrices = rotation_pool[indices].to(device)
@@ -186,5 +186,5 @@ def s3wd_unif(X, p, h=None, n_projs=1000, device='cpu'):
     d = torch.abs(torch.sort(s1_h_rp.transpose(0, 1), dim=1).values - 
                   torch.sort(s2_h_rp.transpose(0, 1), dim=1).values)
 
-    wd = d.pow(p).sum(dim=1).pow(1. / p).mean()
+    wd = d.pow(p).sum(dim=1).mean()
     return wd

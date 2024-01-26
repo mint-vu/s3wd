@@ -11,8 +11,8 @@ class RotationPool:
     pool_size_ = None
 
     @staticmethod
-    def generate(d, pool_size):
-        if RotationPool.rot_matrices_ is None or RotationPool.d_ != d or RotationPool.pool_size_ < pool_size:
+    def get(d, pool_size):
+        if RotationPool.rot_matrices_ is None or RotationPool.d_ != d or RotationPool.pool_size_ != pool_size:
             RotationPool.rot_matrices_ = torch.stack([geotorch.SO(torch.Size([d, d])).sample('uniform') for _ in range(pool_size)])
             RotationPool.d_ = d
             RotationPool.pool_size_ = pool_size
