@@ -5,9 +5,7 @@ import geotorch
 import numpy as np
 
 from utils.misc import generate_rand_projs
-from utils.s3w import get_stereo_proj_torch, epsilon_projection, hStar, RotationPool
-
-from typing import List
+from utils.s3w import get_stereo_proj_torch, epsilon_projection, hStar, RotationPool, unif_hypersphere
 
 
 def ri_s3wd(X, Y, p, h=None, n_projs=1000, n_rotations=1, device='cpu'):
@@ -44,15 +42,14 @@ def ri_s3wd(X, Y, p, h=None, n_projs=1000, n_rotations=1, device='cpu'):
 def ri_s3wd_unif(X, p, h=None, n_projs=1000, n_rotations=1, device='cpu'):
     # NOTE: h must accept vectors of the form (n_rotations, n_points, dim)
     if h is None: h = hStar()
+    n = X.shape[-1]
     
     X = X.to(device)
-    Y_unif = rand_u_hypersphere((n_rotations, X.shape[0], n), n, device=device)
+    Y_unif = unif_hypersphere((n_rotations, X.shape[0], n), device=device)
     
-    n = X.shape[-1]
     rot_matrices = [geotorch.SO(torch.Size([n, n])).sample('uniform') for _ in range(n_rotations)]
     rot_matrices = torch.stack(rot_matrices).to(device)
     X_rot = (rot_matrices @ X.T).permute(0, 2, 1)
-    
 
     X_eps = epsilon_projection(X_rot)
 
@@ -73,15 +70,14 @@ def ri_s3wd_unif(X, p, h=None, n_projs=1000, n_rotations=1, device='cpu'):
 
 def ari_s3wd(X, Y, p, h=None, n_projs=1000, n_rotations=1, pool_size=100, device='cpu'):
     if h is None: h = hStar()
-
     n = X.shape[-1]
 
     assert pool_size >= n_rotations
 
-    rotation_pool = RotationPool.get(n, pool_size)
+    rotation_pool = RotationPool.get(n, pool_size, device=device)
 
     indices = torch.randperm(rotation_pool.size(0))[:n_rotations]
-    rot_matrices = rotation_pool[indices].to(device)
+    rot_matrices = rotation_pool[indices]
 
     X = X.to(device)
     Y = Y.to(device)
@@ -109,18 +105,17 @@ def ari_s3wd(X, Y, p, h=None, n_projs=1000, n_rotations=1, pool_size=100, device
 
 def ari_s3wd_unif(X, p, h=None, n_projs=1000, n_rotations=1, pool_size=100, device='cpu'):
     if h is None: h = hStar()
-
     n = X.shape[-1]
 
     assert pool_size >= n_rotations
 
-    rotation_pool = RotationPool.get(n, pool_size)
+    rotation_pool = RotationPool.get(n, pool_size, device=device)
 
     indices = torch.randperm(rotation_pool.size(0))[:n_rotations]
     rot_matrices = rotation_pool[indices].to(device)
 
     X = X.to(device)
-    Y_unif = rand_u_hypersphere((n_rotations, X.shape[0], n), n, device=device)
+    Y_unif = unif_hypersphere((n_rotations, X.shape[0], n), device=device)
     
     X_rot = (rot_matrices @ X.T).permute(0, 2, 1)
 
@@ -177,7 +172,7 @@ def s3wd_unif(X, p, h=None, n_projs=1000, device='cpu'):
     projs = generate_rand_projs(s1_h.shape[-1], n_projs).to(device)
     s1_h_rp = s1_h @ projs.T
 
-    Y_unif = rand_u_hypersphere(X.shape[0], n,device=device)
+    Y_unif = unif_hypersphere((X.shape[0], n), device=device)
     Y_unif_sp = get_stereo_proj_torch(epsilon_projection(Y_unif)).to(device)
     s2_h = h(Y_unif_sp).double()
 

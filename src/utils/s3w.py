@@ -1,7 +1,7 @@
 import torch
+import torch.nn.functional as F
 import torch.nn as nn
 import numpy as np
-from tqdm import tqdm
 import geotorch
 
 
@@ -11,9 +11,9 @@ class RotationPool:
     pool_size_ = None
 
     @staticmethod
-    def get(d, pool_size):
+    def get(d, pool_size, device='cpu'):
         if RotationPool.rot_matrices_ is None or RotationPool.d_ != d or RotationPool.pool_size_ != pool_size:
-            RotationPool.rot_matrices_ = torch.stack([geotorch.SO(torch.Size([d, d])).sample('uniform') for _ in range(pool_size)])
+            RotationPool.rot_matrices_ = torch.stack([geotorch.SO(torch.Size([d, d])).sample('uniform') for _ in range(pool_size)]).to(device)
             RotationPool.d_ = d
             RotationPool.pool_size_ = pool_size
         return RotationPool.rot_matrices_
@@ -69,15 +69,11 @@ class CustomRS(RotationSchedule):
 
     def get_max(self):
         return self.schedule_dict.get(self.n_epochs - 1, self.current_n_rotations)
-                                       
-# def get_stereo_proj(x):
-#     d = x.shape[-1] - 1
-#     numerator = x[..., :d]
-#     denominator = 1 - x[..., d]
-#     near_pole = np.isclose(denominator, 0, atol=1e-6)
-#     proj = np.full_like(x[..., :d], np.inf) 
-#     proj[~near_pole] = numerator[~near_pole] / denominator[~near_pole, np.newaxis]
-#     return torch.tensor(proj)
+
+def unif_hypersphere(shape, device):
+    samples = torch.randn(shape, device=device)
+    samples = F.normalize(samples, p=2, dim=-1)
+    return samples
 
 def get_stereo_proj_torch(x, epsilon=1e-6):
     d = x.shape[-1] - 1
