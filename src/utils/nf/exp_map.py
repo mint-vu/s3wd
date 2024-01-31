@@ -3,6 +3,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 from utils.nf.base_nf import BaseNF
 
+"""
+Adapted from Bonet et al. 2023 (https://github.com/clbonet/spherical_sliced-wasserstein)
+"""
+
+
 class ExpMap(BaseNF):
     '''
         Radial Exponential Map, introduced in [1]. See also [2] for extensions.
@@ -52,4 +57,13 @@ class ExpMap(BaseNF):
     
     def backward(self, z):
         pass
+    
+def create_NF(d=3, n_blocks=6, n_components=5):
+    flows = []
+    for k in range(n_blocks):
+        radialBlock = ExpMap(d, n_components)
+        flows.append(radialBlock)
+
+    model = BaseNF(flows).to(device)
+    return model
     
