@@ -16,7 +16,7 @@ from scipy.stats import gaussian_kde
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 from datasets import EarthDataHandler, xyz_to_latlon
-sys.path.append("../../")
+sys.path.append("../..")
 from utils.misc import *
 from utils.nf.exp_map import create_NF
 from methods import sswd, s3wd, swd, wd

@@ -18,7 +18,7 @@ from datasets import EarthDataHandler, xyz_to_latlon
 
 sys.path.append("../..")
 from utils.misc import *
-from utils.nf.exp_map import create_NF
+from utils.nf.realnvp import create_RealNVP
 from methods import sswd, s3wd, swd, wd
 from utils.vmf import rand_vmf
 
