@@ -14,6 +14,10 @@ import plotly.offline as offline
 
 from torch.utils.data import Dataset
 
+"""
+Source: Bonet et al. 2023 (https://github.com/clbonet/spherical_sliced-wasserstein)
+"""
+
 
 import importlib
 if importlib.util.find_spec("ext_code") is not None:
