@@ -17,6 +17,7 @@ from ssw import sswd_unif, sswd
 from utils import rand_unif, fibonacci_sphere
 from misc_utils import generate_rand_projs
 from s3w_utils import RotationPool, hStar, epsilon_projection, get_stereo_proj_torch, unif_hypersphere
+from vmf_utils import rand_vmf, pdf_vmf
 import torch.nn.functional as F
 
 def main():
@@ -70,12 +71,22 @@ def main():
     avg_BCE = torch.cat(BCE_losses).mean().item()
 
     test_W2 = []
+    test_NLL = []
     for embedding in embeddings:
-        sphere_samples = rand_unif(embedding.size(0), embedding.size(1), Config.device)
+        sphere_samples = get_prior(Config.prior, Config.d, embedding.size(0), Config.device)
         embedding = embedding.to(Config.device) 
-        W2_dist = g_wasserstein(embedding, sphere_samples)
+        W2_dist = g_wasserstein(embedding, sphere_samples, p=2)
         test_W2.append(W2_dist)
+
+        if Config.prior == 'vmf':
+            for mu in torch.tensor(fibonacci_sphere(10), dtype=torch.float32, device=Config.device):
+                nll = -torch.log(pdf_vmf(embedding, mu, kappa=10)).detach().cpu()
+                test_NLL.append(nll)
+        else:
+            test_NLL.append(0)
+
     avg_test_W2 = torch.tensor(test_W2).mean().item()
+    avg_test_NLL = torch.tensor(test_NLL).mean().item()
 
     os.makedirs('results', exist_ok=True)
     result_line = (
@@ -90,6 +101,7 @@ def main():
         f"Total Time: {total_time:.4f}s, "
         f"Time per Epoch: {time_per_epoch:.4f}s, "
         f"Spherical Wasserstein Distance: {avg_test_W2:.4f}, "
+        f"Average NLL: {avg_test_NLL:.4f}, "
         f"Average BCE: {avg_BCE:.4f}\n"
     )
     with open('results/all_results.txt', 'a') as f:
@@ -147,9 +159,20 @@ def get_prior(prior, dim, n_samples, device):
     if prior == 'uniform':
         return rand_unif(n_samples, dim, device)
     elif prior == 'vmf':
-        vmf_samples = fibonacci_sphere(n_samples)
-        return torch.tensor(vmf_samples, dtype=torch.float, device=device)
+        assert dim == 3
+        n = 10
+        mus = torch.tensor(fibonacci_sphere(10), dtype=torch.float32)
+        kappa = 10
 
+        ps = np.ones(n)/n
+        Z = np.random.multinomial(n_samples,ps)
+        X = []
+        for k in range(len(Z)):
+            if Z[k]>0:
+                vmf = rand_vmf(mus[k], kappa=kappa, N=int(Z[k]))
+                X += list(vmf)
+        z = torch.tensor(X, device=device, dtype=torch.float)
+        return z
 
 def get_embs(model, data_loader, device):
     model.eval()

@@ -17,7 +17,8 @@ from utils import TwoAugUnsupervisedDataset, AverageMeter, strfdelta
 from encoder import ResNet
 
 import sys
-sys.path.append('../../../')
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from methods.sswd import sswd_unif
 from methods.s3wd import s3wd, ri_s3wd, ari_s3wd
 from methods.swd import swd
