@@ -75,6 +75,15 @@ def unif_hypersphere(shape, device):
     samples = F.normalize(samples, p=2, dim=-1)
     return samples
 
+def get_stereo_proj(x):
+    d = x.shape[-1] - 1
+    numerator = x[..., :d]
+    denominator = 1 - x[..., d]
+    near_pole = np.isclose(denominator, 0, atol=1e-6)
+    proj = np.full_like(x[..., :d], np.inf) 
+    proj[~near_pole] = numerator[~near_pole] / denominator[~near_pole, np.newaxis]
+    return torch.tensor(proj)
+
 def get_stereo_proj_torch(x, epsilon=1e-6):
     d = x.shape[-1] - 1
     numerator = 2 * x[..., :d]

@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from utils.nf.base_nf import BaseNF
-from affine_coupling import AffineCoupling
-from reverse import Reverse
+from utils.nf.affine_coupling import AffineCoupling
+from utils.nf.reverse import Reverse
 
 class shifting(nn.Module):
     def __init__(self, d_in, nh, d_out, n_layers):
