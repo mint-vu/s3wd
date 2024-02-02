@@ -2,8 +2,8 @@ import torch
 import torch.nn.functional as F
 import torch.distributions as D
 from torch.utils.data import DataLoader, TensorDataset
-from utils.power_spherical_utils import PowerSpherical
-from utils.vi_utils import ULA_sphere
+from utils.power_spherical import PowerSpherical
+from utils.vi import ULA_sphere
 
 from itertools import cycle
 from tqdm.auto import tqdm

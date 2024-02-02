@@ -10,16 +10,13 @@ from tqdm.auto import tqdm
 from IPython.display import display, clear_output
 
 from utils.nf.exp_map import create_NF
-from utils.vi_utils import *
+from utils.vi import *
 from utils.misc import *
 
-mus = torch.tensor([[1.5, 0.7+np.pi/2], [1, -1+np.pi/2], [5, 0.6+np.pi/2], [4, -0.7+np.pi/2]], device=device)
-target_mus = spherical_to_euclidean_torch(mus)
-
-    """
-    Experiment 2, section H.7.3
-    Refactored from Bonet et al. 2023 (https://github.com/clbonet/spherical_sliced-wasserstein)
-    """
+"""
+Experiment 2, section H.7.3
+Refactored from Bonet et al. 2023 (https://github.com/clbonet/spherical_sliced-wasserstein)
+"""
 
 def run_exp(n_epochs, V, d_func, d_args, lr=1e-3, model=None, d=3, n_particles=100, steps_mcmc=20, 
              dt_mcmc=1e-3, device='cpu', snapshot_t=None):

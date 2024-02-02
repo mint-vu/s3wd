@@ -6,7 +6,7 @@ import numpy as np
 from tqdm.auto import trange
 from copy import deepcopy
 
-from methods.ssw import sswd
+from methods.sswd import sswd
 # from methods.sw import swd
 from utils.power_spherical import PowerSpherical
 from utils.nf.normalizing_flows import make_NF
