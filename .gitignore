@@ -3,3 +3,4 @@ __pycache__/
 *.pdf
 *.png
 data/
+.DS_Store
