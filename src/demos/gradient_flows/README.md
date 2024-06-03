@@ -3,16 +3,13 @@
 
 ## $h_1(\cdot)$
 
-<!-- ![](Using_h1.mp4) -->
 
-<video controls>
-  <source src="Using_h1.mp4" type="video/mp4">
-</video>
+<img src="./Using_h1.gif?raw=true">
+
+[See full .mp4 file.](./Using_h1.mp4)
 
 ## $h_{NN}(\cdot)$
 
-<!-- ![](Using_NN_h.mp4) -->
+<img src="./Using_NN_h.gif?raw=true">
 
-<video controls>
-  <source src="Using_NN_h.mp4" type="video/mp4">
-</video>
+[See full .mp4 file.](./Using_NN_h.mp4)
