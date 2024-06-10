@@ -1,5 +1,7 @@
 # Stereographic Spherical Sliced Wasserstein Distances
 
+### [[ Project Page ]](https://abi-kothapalli.github.io/s3w)
+
 This repository contains the accompanying code/experiments for the paper [Stereographic Spherical Sliced Wasserstein Distances](https://arxiv.org/abs/2402.02345). 
 
 ## Abstract
